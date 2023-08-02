@@ -10,6 +10,9 @@ import re
 import logging
 
 
+# PII_FIELDS is a list of the top 5 fields in `user_data.csv` that qualify as
+# personally identifiable information (PII).
+PII_FIELDS = ("name", "email", "phone", "ssn", "password")
 regex = {
     "pattern": lambda f, s: r"(?P<field>{})=[^{}]+".format("|".join(f), s),
     "repl": lambda r: r"\g<field>={}".format(r),
@@ -23,6 +26,26 @@ def filter_datum(
     """
     pattern, repl = regex["pattern"], regex["repl"]
     return re.sub(pattern(fields, separator), repl(redaction), message)
+
+
+def get_logger() -> logging.Logger:
+    """
+    `get_logger` creates a logger name `user_data`. It logs up to logging.INFO.
+    It does not propagate messages to other loggers.
+    It has `StreamHandler` which logs to the console, and `RedactingFormatter`
+    as formatter.
+
+    Returns:
+        logging.Logger: A logger instance.
+    """
+    name = "user_data"
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(RedactingFormatter(PII_FIELDS))
+    logger.addHandler(stream_handler)
+    return logger
 
 
 class RedactingFormatter(logging.Formatter):
@@ -65,7 +88,14 @@ if __name__ == "__main__":
     for message in messages:
         print(filter_datum(fields, 'xxx', message, ';'))
 
+    # Test RedactingFormatter
     formatter = RedactingFormatter(fields=("email", "ssn", "password"))
     for m in messages:
         print(formatter.format(logging.LogRecord("my_logger",
               logging.INFO, None, None, message, None, None)))
+
+    # Test get_logger
+    print(get_logger.__annotations__.get('return'))
+    print("PII_FIELDS: {}".format(len(PII_FIELDS)))
+    logger = get_logger()
+    logger.info("This is a name=cheezaram;password=abc; Author of the code.")

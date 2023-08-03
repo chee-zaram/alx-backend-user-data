@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
 This is the `filtered_logger` module.
-It contains the function `filter_datum` which obfuscates certain fields
-in a log data.
+It contains the class `RedactingFormatter` and certain functions
+that help obfuscate certain fields in a log data.
 """
 
-from typing import List, Optional
+from typing import List
 import re
 import logging
 import os
@@ -50,7 +50,7 @@ def get_logger() -> logging.Logger:
     return logger
 
 
-def get_db() -> Optional[mysql.connector.connection.MySQLConnection]:
+def get_db() -> mysql.connector.connection.MySQLConnection:
     """
     `get_db` returns a connector to the database `my_db`.
     It uses the following environment variables:
@@ -66,9 +66,9 @@ def get_db() -> Optional[mysql.connector.connection.MySQLConnection]:
         mysql.connector.connection.MySQLConnection: A database connector.
     """
     db_host = os.getenv("PERSONAL_DATA_DB_HOST", "localhost")
-    db_name = os.getenv("PERSONAL_DATA_DB_NAME", "")
+    db_name = os.getenv("PERSONAL_DATA_DB_NAME", "my_db")
     db_user = os.getenv("PERSONAL_DATA_DB_USERNAME", "root")
-    db_pwd = os.getenv("PERSONAL_DATA_DB_PASSWORD", "my_db")
+    db_pwd = os.getenv("PERSONAL_DATA_DB_PASSWORD", "")
 
     try:
         connector = mysql.connector.connect(

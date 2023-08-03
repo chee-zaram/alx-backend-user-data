@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+This tests the `filtered_logger` module.
+"""
 import unittest
 from unittest.mock import patch
 from io import StringIO
@@ -11,7 +14,10 @@ from filtered_logger import RedactingFormatter
 
 
 class TestFilteredLogger(unittest.TestCase):
+    """This tests the filtered_logger module."""
+
     def test_filter_datum(self) -> None:
+        """Tests the filter_datum function."""
         fields = ["password", "date_of_birth"]
         messages = self.get_data_from_csv()
         for m in messages:
@@ -23,6 +29,7 @@ class TestFilteredLogger(unittest.TestCase):
                 self.assertIn("date_of_birth=xxx", msg)
 
     def test_get_logger(self) -> None:
+        """Tests the get_logger function."""
         reval = str(fl.get_logger.__annotations__.get('return'))
         self.assertTrue(reval == "<class 'logging.Logger'>")
         logger = fl.get_logger()
@@ -58,6 +65,7 @@ class TestFilteredLogger(unittest.TestCase):
                 mock_stdout.truncate(0)
 
     def test_redacting_formatter(self) -> None:
+        """Tests the RedactingFormatter class."""
         messages = self.get_data_from_csv()
         fields = ("email", "ssn", "password")
         formatter = RedactingFormatter(fields=fields)
@@ -75,6 +83,7 @@ class TestFilteredLogger(unittest.TestCase):
                 self.assertTrue("{}={}".format(f, formatter.REDACTION) in msg)
 
     def test_get_db(self) -> None:
+        """Test the get_db function."""
         db = fl.get_db()
         if not db:
             return
@@ -86,6 +95,7 @@ class TestFilteredLogger(unittest.TestCase):
         db.close()
 
     def get_data_from_csv(self) -> List[Dict]:
+        """A helper method."""
         data = []
         data_fn = "user_data.csv"
         path_comp = __file__.split(os.path.sep)

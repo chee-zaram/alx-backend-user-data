@@ -5,10 +5,9 @@ It contains the function `filter_datum` which obfuscates certain fields
 in a log data.
 """
 
-from typing import List, Dict
+from typing import List
 import re
 import logging
-import csv
 import os
 import mysql.connector
 
@@ -66,17 +65,22 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
     Returns:
         mysql.connector.connection.MySQLConnection: A database connector.
     """
-    db_user = os.getenv("PERSONAL_DATA_DB_USERNAME", "root")
-    db_pwd = os.getenv("PERSONAL_DATA_DB_PASSWORD", "")
     db_host = os.getenv("PERSONAL_DATA_DB_HOST", "localhost")
-    db_name = os.getenv("PERSONAL_DATA_DB_NAME", "my_db")
+    db_name = os.getenv("PERSONAL_DATA_DB_NAME", "")
+    db_user = os.getenv("PERSONAL_DATA_DB_USERNAME", "root")
+    db_pwd = os.getenv("PERSONAL_DATA_DB_PASSWORD", "my_db")
 
-    return mysql.connector.connect(
-        host=db_host,
-        user=db_user,
-        password=db_pwd,
-        database=db_name,
-    )
+    try:
+        connector = mysql.connector.connect(
+            host=db_host,
+            user=db_user,
+            password=db_pwd,
+            database=db_name,
+        )
+    except mysql.connector.Error:
+        return None
+
+    return connector
 
 
 class RedactingFormatter(logging.Formatter):
@@ -104,62 +108,3 @@ class RedactingFormatter(logging.Formatter):
             raise TypeError("record must be an instance of logging.LogRecord")
         msg = super(RedactingFormatter, self).format(record)
         return filter_datum(self.fields, self.REDACTION, msg, self.SEPARATOR)
-
-
-def filter_datum_test() -> None:
-    fields = ["password", "date_of_birth"]
-    messages = get_data_from_csv()
-    for m in messages:
-        msg = [f"{k}={v}" for k, v in m.items()]
-        print(filter_datum(fields, 'xxx', ";".join(msg), ';'))
-
-
-def get_logger_test() -> None:
-    print(get_logger.__annotations__.get('return'))
-    print("PII_FIELDS: {}".format(len(PII_FIELDS)))
-    logger = get_logger()
-
-    data = get_data_from_csv()
-    for datum in data:
-        msg = [f"{k}={v}" for k, v in datum.items()]
-        logger.info(";".join(msg))
-
-
-def redacting_formatter_test() -> None:
-    messages = get_data_from_csv()
-    formatter = RedactingFormatter(fields=("email", "ssn", "password"))
-    for m in messages:
-        m = [f"{k}={v}" for k, v in m.items()]
-        print(formatter.format(logging.LogRecord("my_logger",
-              logging.INFO, None, None, ";".join(m), None, None)))
-
-
-def get_db_test() -> None:
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT COUNT(*) FROM users;")
-    for row in cursor:
-        print(row[0])
-    cursor.close()
-    db.close()
-
-
-def get_data_from_csv() -> List[Dict]:
-    data = []
-    csv_file = "user_data.csv"
-    if not os.path.exists(csv_file) or not os.path.isfile(csv_file):
-        return data
-
-    with open("user_data.csv", newline="") as csv_file:
-        reader = csv.DictReader(csv_file)
-        for row in reader:
-            data.append(row)
-
-    return data
-
-
-if __name__ == "__main__":
-    filter_datum_test()
-    get_logger_test()
-    redacting_formatter_test()
-    get_db_test()

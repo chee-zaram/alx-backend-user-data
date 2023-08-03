@@ -5,7 +5,7 @@ It contains the function `filter_datum` which obfuscates certain fields
 in a log data.
 """
 
-from typing import List
+from typing import List, Optional
 import re
 import logging
 import os
@@ -50,7 +50,7 @@ def get_logger() -> logging.Logger:
     return logger
 
 
-def get_db() -> mysql.connector.connection.MySQLConnection:
+def get_db() -> Optional[mysql.connector.connection.MySQLConnection]:
     """
     `get_db` returns a connector to the database `my_db`.
     It uses the following environment variables:

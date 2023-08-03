@@ -9,6 +9,8 @@ from typing import List, Dict
 import re
 import logging
 import csv
+import os
+import mysql.connector
 
 
 # PII_FIELDS is a list of the top 5 fields in `user_data.csv` that qualify as
@@ -49,6 +51,34 @@ def get_logger() -> logging.Logger:
     return logger
 
 
+def get_db() -> mysql.connector.connection.MySQLConnection:
+    """
+    `get_db` returns a connector to the database `my_db`.
+    It uses the following environment variables:
+        PERSONAL_DATA_DB_USERNAME: default `root`
+        PERSONAL_DATA_DB_PASSWORD: default empty string
+        PERSONAL_DATA_DB_HOST: default `localhost`
+        PERSONAL_DATA_DB_NAME: default `my_db`
+
+    You can use the following command to get some data:
+        $ cat main.sql | mysql -uroot -p
+
+    Returns:
+        mysql.connector.connection.MySQLConnection: A database connector.
+    """
+    db_user = os.getenv("PERSONAL_DATA_DB_USERNAME", "root")
+    db_pwd = os.getenv("PERSONAL_DATA_DB_PASSWORD", "")
+    db_host = os.getenv("PERSONAL_DATA_DB_HOST", "localhost")
+    db_name = os.getenv("PERSONAL_DATA_DB_NAME", "my_db")
+
+    return mysql.connector.connect(
+        host=db_host,
+        user=db_user,
+        password=db_pwd,
+        database=db_name,
+    )
+
+
 class RedactingFormatter(logging.Formatter):
     """Redacting Formatter class
     """
@@ -76,7 +106,7 @@ class RedactingFormatter(logging.Formatter):
         return filter_datum(self.fields, self.REDACTION, msg, self.SEPARATOR)
 
 
-def test_filter_datum() -> None:
+def filter_datum_test() -> None:
     fields = ["password", "date_of_birth"]
     messages = get_data_from_csv()
     for m in messages:
@@ -84,7 +114,7 @@ def test_filter_datum() -> None:
         print(filter_datum(fields, 'xxx', ";".join(msg), ';'))
 
 
-def test_get_logger() -> None:
+def get_logger_test() -> None:
     print(get_logger.__annotations__.get('return'))
     print("PII_FIELDS: {}".format(len(PII_FIELDS)))
     logger = get_logger()
@@ -95,7 +125,7 @@ def test_get_logger() -> None:
         logger.info(";".join(msg))
 
 
-def test_redacting_formatter() -> None:
+def redacting_formatter_test() -> None:
     messages = get_data_from_csv()
     formatter = RedactingFormatter(fields=("email", "ssn", "password"))
     for m in messages:
@@ -104,8 +134,22 @@ def test_redacting_formatter() -> None:
               logging.INFO, None, None, ";".join(m), None, None)))
 
 
+def get_db_test() -> None:
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT COUNT(*) FROM users;")
+    for row in cursor:
+        print(row[0])
+    cursor.close()
+    db.close()
+
+
 def get_data_from_csv() -> List[Dict]:
     data = []
+    csv_file = "user_data.csv"
+    if not os.path.exists(csv_file) or not os.path.isfile(csv_file):
+        return data
+
     with open("user_data.csv", newline="") as csv_file:
         reader = csv.DictReader(csv_file)
         for row in reader:
@@ -115,6 +159,7 @@ def get_data_from_csv() -> List[Dict]:
 
 
 if __name__ == "__main__":
-    test_filter_datum()
-    test_get_logger()
-    test_redacting_formatter()
+    filter_datum_test()
+    get_logger_test()
+    redacting_formatter_test()
+    get_db_test()

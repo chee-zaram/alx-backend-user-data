@@ -108,3 +108,37 @@ class RedactingFormatter(logging.Formatter):
             raise TypeError("record must be an instance of logging.LogRecord")
         msg = super(RedactingFormatter, self).format(record)
         return filter_datum(self.fields, self.REDACTION, msg, self.SEPARATOR)
+
+
+def main() -> None:
+    """
+    `main` obtains a database connection using `get_db` and retrieves all rows
+    in the `users` table and displays each row under a filtered format.
+    To get some data, run:
+        $ cat main_main.sql | mysql -uroot -p
+    """
+    db = get_db()
+    if not db:
+        return
+
+    logger = get_logger()
+    cursor = db.cursor()
+    columns = "name,email,phone,ssn,password,ip,last_login,user_agent"
+    cursor.execute("SELECT {} FROM users".format(columns))
+    rows = cursor.fetchall()
+    fmt = "name={}; email={}; phone={}; ssn={}; password={}; ip={};" + \
+        " last_login={}; user_agent={};"
+
+    for row in rows:
+        formatted_row = fmt.format(
+            row[0], row[1], row[2], row[3], row[4],
+            row[5], row[6], row[7]
+        )
+        logger.info(formatted_row)
+
+    cursor.close()
+    db.close()
+
+
+if __name__ == "__main__":
+    main()

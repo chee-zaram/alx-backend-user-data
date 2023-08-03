@@ -5,9 +5,10 @@ It contains the function `filter_datum` which obfuscates certain fields
 in a log data.
 """
 
-from typing import List
+from typing import List, Dict
 import re
 import logging
+import csv
 
 
 # PII_FIELDS is a list of the top 5 fields in `user_data.csv` that qualify as
@@ -75,27 +76,45 @@ class RedactingFormatter(logging.Formatter):
         return filter_datum(self.fields, self.REDACTION, msg, self.SEPARATOR)
 
 
-if __name__ == "__main__":
+def test_filter_datum() -> None:
     fields = ["password", "date_of_birth"]
-    messages = [
-        "name=egg;email=eggmin@eggsample.com;password=eggcellent;" +
-        "date_of_birth=12/12/1986;",
-        "name=bob;email=bob@dylan.com;password=bobbycool;" +
-        "date_of_birth=03/04/1993;",
-    ]
-
-    # Test filter_datum
-    for message in messages:
-        print(filter_datum(fields, 'xxx', message, ';'))
-
-    # Test RedactingFormatter
-    formatter = RedactingFormatter(fields=("email", "ssn", "password"))
+    messages = get_data_from_csv()
     for m in messages:
-        print(formatter.format(logging.LogRecord("my_logger",
-              logging.INFO, None, None, message, None, None)))
+        msg = [f"{k}={v}" for k, v in m.items()]
+        print(filter_datum(fields, 'xxx', ";".join(msg), ';'))
 
-    # Test get_logger
+
+def test_get_logger() -> None:
     print(get_logger.__annotations__.get('return'))
     print("PII_FIELDS: {}".format(len(PII_FIELDS)))
     logger = get_logger()
-    logger.info("This is a name=cheezaram;password=abc; Author of the code.")
+
+    data = get_data_from_csv()
+    for datum in data:
+        msg = [f"{k}={v}" for k, v in datum.items()]
+        logger.info(";".join(msg))
+
+
+def test_redacting_formatter() -> None:
+    messages = get_data_from_csv()
+    formatter = RedactingFormatter(fields=("email", "ssn", "password"))
+    for m in messages:
+        m = [f"{k}={v}" for k, v in m.items()]
+        print(formatter.format(logging.LogRecord("my_logger",
+              logging.INFO, None, None, ";".join(m), None, None)))
+
+
+def get_data_from_csv() -> List[Dict]:
+    data = []
+    with open("user_data.csv", newline="") as csv_file:
+        reader = csv.DictReader(csv_file)
+        for row in reader:
+            data.append(row)
+
+    return data
+
+
+if __name__ == "__main__":
+    test_filter_datum()
+    test_get_logger()
+    test_redacting_formatter()

@@ -32,3 +32,11 @@ def test_unauthorized():
     Tests the unauthorized error handler.
     """
     abort(401, description="Not Authorized")
+
+
+@app_views.route("/forbidden", methods=["GET"], strict_slashes=False)
+def test_forbidden():
+    """
+    Tests the forbidden error handler.
+    """
+    abort(403, description="User Forbidden")

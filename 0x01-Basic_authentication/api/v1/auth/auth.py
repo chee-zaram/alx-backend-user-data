@@ -3,7 +3,8 @@
 Module `auth` contains the class `Auth`.
 """
 
-from typing import List, TypeVar
+from typing import List, TypeVar, Union
+from flask import request
 
 
 class Auth:
@@ -59,13 +60,17 @@ class Auth:
 
         return True
 
-    def authorization_header(self, request=None) -> str:
+    def authorization_header(
+            self, request: request = None) -> Union[str, None]:
         """
         `authorization_header` returns None.
         """
-        return None
+        if request is None or request.headers.get("Authorization") is None:
+            return None
 
-    def current_user(self, request=None) -> TypeVar('User'):
+        return request.headers.get("Authorization")
+
+    def current_user(self, request: request = None) -> TypeVar('User'):
         """
         `current_user` returns None.
         """

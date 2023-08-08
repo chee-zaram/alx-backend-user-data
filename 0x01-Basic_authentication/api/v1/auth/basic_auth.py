@@ -4,8 +4,11 @@ Module `basic_auth` contains the `BasicAuth` class.
 This class inherits from the `Auth` class.
 """
 
-from api.v1.auth.auth import Auth
+from base64 import b64decode
 from typing import Optional
+import binascii
+
+from api.v1.auth.auth import Auth
 
 
 class BasicAuth(Auth):
@@ -36,3 +39,30 @@ class BasicAuth(Auth):
             return
 
         return got_scheme_and_token[1]
+
+    def decode_base64_authorization_header(
+        self,
+        base64_authorization_header: str
+    ) -> Optional[str]:
+        """
+        `decode_base64_authorization_header` gets the decoded value of
+        `base64_authorization_header`.
+
+        Returns:
+            str: The decoded value of `base64_authorization_header` as utf-8.
+            None:
+                If base64_authorization_header is None.
+                If base64_authorization_header is not a string.
+                If base64_authorization_header is not valid base64.
+        """
+        if not base64_authorization_header or not isinstance(
+                base64_authorization_header, str):
+            return
+
+        try:
+            decoded = b64decode(base64_authorization_header,
+                                validate=True).decode("UTF-8")
+        except (UnicodeEncodeError, binascii.Error, UnicodeDecodeError):
+            return
+
+        return decoded

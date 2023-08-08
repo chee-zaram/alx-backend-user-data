@@ -46,6 +46,29 @@ class TestBasicAuth(unittest.TestCase):
         self.assertTrue(type(reval) == str)
         self.assertTrue(token == reval)
 
+    def test_decode_base64_authorization_header_with_None(self):
+        """Test decode_base64_authorization_header with None."""
+        self.assertIsNone(self.ba.decode_base64_authorization_header(None))
+
+    def test_decode_base64_authorization_header_with_non_str(self):
+        """Test decode_base64_authorization_header with non-str."""
+        self.assertIsNone(self.ba.decode_base64_authorization_header(100))
+
+    def test_decode_base64_authorization_header_with_empty_str(self):
+        """Test decode_base64_authorization_header with empty str."""
+        self.assertIsNone(self.ba.decode_base64_authorization_header(""))
+
+    def test_decode_base64_authorization_header_with_invalid_base64(self):
+        """Test decode_base64_authorization_header with invalid base64 str."""
+        invalid = "InvalidBase64$#%"
+        self.assertIsNone(self.ba.decode_base64_authorization_header(invalid))
+
+    def test_decode_base64_authorization_header(self):
+        """Test decode_base64_authorization_header."""
+        token = "SGVsbG8gV29ybGQ="  # Hello World
+        decoded = self.ba.decode_base64_authorization_header(token)
+        self.assertEqual("Hello World", decoded)
+
 
 if __name__ == "__main__":
     unittest.main()

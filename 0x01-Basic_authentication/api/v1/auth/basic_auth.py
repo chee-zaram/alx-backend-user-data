@@ -5,8 +5,9 @@ This class inherits from the `Auth` class.
 """
 
 from base64 import b64decode
-from typing import Optional
+from typing import Optional, Tuple
 import binascii
+import re
 
 from api.v1.auth.auth import Auth
 
@@ -66,3 +67,32 @@ class BasicAuth(Auth):
             return
 
         return decoded
+
+    def extract_user_credentials(
+        self,
+        decoded_base64_authorization_header: str
+    ) -> Tuple[str, str]:
+        """
+        `extract_user_credentials` gets the user credentials from the decoded
+        base64 token in the authorization header.
+
+        Returns:
+            (str, str): User email and password separated by `:` in the header.
+            (None, None):
+                If `decoded_base64_authorization_header` is None.
+                If `decoded_base64_authorization_header` is not a string.
+                If `decoded_base64_authorization_header` does not contain `:`.
+        """
+
+        if not decoded_base64_authorization_header:
+            return
+
+        if type(decoded_base64_authorization_header) != str:
+            return
+
+        p = r'(?P<username>[^:]+):(?P<pwd>[^:]+)'
+        match = re.fullmatch(p, decoded_base64_authorization_header.strip())
+        if not match:
+            return
+
+        return (match.group("username"), match.group("pwd"))

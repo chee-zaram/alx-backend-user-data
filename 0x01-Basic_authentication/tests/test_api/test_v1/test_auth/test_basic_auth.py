@@ -69,6 +69,29 @@ class TestBasicAuth(unittest.TestCase):
         decoded = self.ba.decode_base64_authorization_header(token)
         self.assertEqual("Hello World", decoded)
 
+    def test_extract_user_credentials_with_None(self):
+        """Test test_extract_user_credentials with None."""
+        self.assertIsNone(self.ba.extract_user_credentials(None))
+
+    def test_extract_user_credentials_with_non_str(self):
+        """Test test_extract_user_credentials with non-str."""
+        self.assertIsNone(self.ba.extract_user_credentials(100))
+
+    def test_extract_user_credentials_with_invalid_format(self):
+        """Test test_extract_user_credentials with non-str."""
+        self.assertIsNone(self.ba.extract_user_credentials("chee:zaram:okeke"))
+
+    def test_extract_user_credentials(self):
+        """Test test_extract_user_credentials."""
+        user_pwd = "cheezaram:okeke"
+        user, pwd = (user_pwd.split(":"))
+        reval = self.ba.extract_user_credentials(user_pwd)
+        self.assertTrue(reval is not None)
+        self.assertTrue(type(reval) == tuple)
+        got_user, got_pwd = reval
+        self.assertEqual(got_user, user)
+        self.assertEqual(got_pwd, pwd)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -71,15 +71,27 @@ class TestBasicAuth(unittest.TestCase):
 
     def test_extract_user_credentials_with_None(self):
         """Test test_extract_user_credentials with None."""
-        self.assertIsNone(self.ba.extract_user_credentials(None))
+        reval = self.ba.extract_user_credentials(None)
+        self.assertTrue(type(reval) == tuple)
+        self.assertEqual(len(reval), 2)
+        for i in reval:
+            self.assertIsNone(i)
 
     def test_extract_user_credentials_with_non_str(self):
         """Test test_extract_user_credentials with non-str."""
-        self.assertIsNone(self.ba.extract_user_credentials(100))
+        reval = self.ba.extract_user_credentials(100)
+        self.assertTrue(type(reval) == tuple)
+        self.assertEqual(len(reval), 2)
+        for i in reval:
+            self.assertIsNone(i)
 
     def test_extract_user_credentials_with_invalid_format(self):
         """Test test_extract_user_credentials with non-str."""
-        self.assertIsNone(self.ba.extract_user_credentials("chee:zaram:okeke"))
+        reval = self.ba.extract_user_credentials("chee:zaram:okeke")
+        self.assertTrue(type(reval) == tuple)
+        self.assertEqual(len(reval), 2)
+        for i in reval:
+            self.assertIsNone(i)
 
     def test_extract_user_credentials(self):
         """Test test_extract_user_credentials."""
@@ -88,6 +100,9 @@ class TestBasicAuth(unittest.TestCase):
         reval = self.ba.extract_user_credentials(user_pwd)
         self.assertTrue(reval is not None)
         self.assertTrue(type(reval) == tuple)
+        self.assertEqual(len(reval), 2)
+        for i in reval:
+            self.assertTrue(type(i) == str)
         got_user, got_pwd = reval
         self.assertEqual(got_user, user)
         self.assertEqual(got_pwd, pwd)

@@ -5,6 +5,7 @@ Module `auth` contains the class `Auth`.
 
 from typing import List, TypeVar, Union
 from flask import request
+import re
 
 
 class Auth:
@@ -43,21 +44,16 @@ class Auth:
         if not all(isinstance(p, str) for p in excluded_paths):
             raise TypeError("excluded_paths must be a list of strings")
 
-        # We need to make the method slash-tolerant.
-        # We standardize all paths to have a trailing slash.
-        excluded_paths_copy = excluded_paths.copy()
-        if path[-1] != "/":
-            path = path + "/"
-
-        for i, p in enumerate(excluded_paths_copy):
-            if path == p:
+        for excluded_path in map(lambda x: x.strip(), excluded_paths):
+            pattern = ''
+            if excluded_path[-1] == '*':
+                pattern = '{}.*'.format(excluded_path[0:-1])
+            elif excluded_path[-1] == '/':
+                pattern = '{}/*'.format(excluded_path[0:-1])
+            else:
+                pattern = '{}/*'.format(excluded_path)
+            if re.match(pattern, path):
                 return False
-            if p[-1] == "/":
-                continue
-            excluded_paths_copy[i] = p + "/"
-            if path == excluded_paths_copy[i]:
-                return False
-
         return True
 
     def authorization_header(

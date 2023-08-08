@@ -4,15 +4,44 @@ Test for the `basic_auth` module.
 """
 
 import unittest
+from os import path, remove, rename
+
 from api.v1.auth.basic_auth import BasicAuth
 from api.v1.auth.auth import Auth
+from models.user import User
 
 
 class TestBasicAuth(unittest.TestCase):
     """Test for the `basic_auth` module."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Runs once, before any other method."""
+        user_path = ".db_User.json"
+        if not path.exists(user_path):
+            return
+        rename(user_path, user_path + ".bk")
+
+    @classmethod
+    def tearDownClass(cls):
+        """Runs last, after every other method."""
+        user_path = ".db_User.json"
+        if not path.exists(user_path + ".bk"):
+            return
+        rename(user_path + ".bk", user_path)
+
     def setUp(self):
+        """Runs before every test case."""
         self.ba = BasicAuth()
+        user_path = ".db_User.json"
+        if path.exists(user_path):
+            remove(user_path)
+
+    def tearDown(self):
+        """Runs after every test case."""
+        user_path = ".test_db_user.json"
+        if path.exists(user_path):
+            remove(user_path)
 
     def test_inheritance(self):
         """Tests that BasicAuth inherits from Auth."""
@@ -106,6 +135,54 @@ class TestBasicAuth(unittest.TestCase):
         got_user, got_pwd = reval
         self.assertEqual(got_user, user)
         self.assertEqual(got_pwd, pwd)
+
+    def test_user_object_from_credentials_with_None_email(self):
+        """Test user_object_from_credentials with None email."""
+        self.assertIsNone(self.ba.user_object_from_credentials(None, "pwd"))
+
+    def test_user_object_from_credentials_with_email_non_str(self):
+        """Test user_object_from_credentials with email non-str."""
+        self.assertIsNone(self.ba.user_object_from_credentials(100, "pwd"))
+
+    def test_user_object_from_credentials_with_None_pwd(self):
+        """Test user_object_from_credentials with None pwd."""
+        self.assertIsNone(self.ba.user_object_from_credentials("a@b.c", None))
+
+    def test_user_object_from_credentials_with_pwd_non_str(self):
+        """Test user_object_from_credentials with pwd non-str."""
+        self.assertIsNone(self.ba.user_object_from_credentials("a@b.c", 100))
+
+    def test_user_object_from_credentials_with_invalid_email(self):
+        """Test user_object_from_credentials with invalid email."""
+        email = "cheeeee@zaram.com"
+        pwd = "pwd"
+        u = User()
+        u.email = email
+        u.password = pwd
+        # We don't save so it shouldn't be in the DB.
+        self.assertIsNone(self.ba.user_object_from_credentials(email, pwd))
+
+    def test_user_object_from_credentials_with_invalid_pwd(self):
+        """Test user_object_from_credentials with invalid password."""
+        email = "chee@zaram.com"
+        pwd = "pwd"
+        u = User()
+        u.email = email
+        u.password = pwd
+        u.save()
+        self.assertIsNone(self.ba.user_object_from_credentials(email, "PWD"))
+
+    def test_user_object_from_credentials(self):
+        """Test user_object_from_credentials."""
+        email = "chee@zaram.com"
+        pwd = "pwd"
+        u = User()
+        u.email = email
+        u.password = pwd
+        u.save()
+        got_u = self.ba.user_object_from_credentials(email, pwd)
+        self.assertTrue(isinstance(got_u, User))
+        self.assertEqual(got_u.email, u.email)
 
 
 if __name__ == "__main__":

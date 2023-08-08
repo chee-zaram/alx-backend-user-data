@@ -5,11 +5,12 @@ This class inherits from the `Auth` class.
 """
 
 from base64 import b64decode
-from typing import Optional, Tuple
+from typing import Optional, Tuple, TypeVar
 import binascii
 import re
 
 from api.v1.auth.auth import Auth
+from models.user import User
 
 
 class BasicAuth(Auth):
@@ -96,3 +97,41 @@ class BasicAuth(Auth):
             return (None, None)
 
         return (match.group("username"), match.group("pwd"))
+
+    def user_object_from_credentials(
+        self,
+        user_email: str,
+        user_pwd: str
+    ) -> TypeVar('User'):
+        """
+        `user_object_from_credentials` gets a user instance based on the email
+        and password.
+
+        Returns:
+            User: An instance of the User class.
+            None:
+                If `user_email` is None or not a string.
+                If `user_pwd` is None or not a string.
+                If the database has no record of user with given email.
+                If `user_pwd` is not the password of the User instance found.
+        """
+        if not user_email or type(user_email) != str:
+            return
+
+        if not user_pwd or type(user_pwd) != str:
+            return
+
+        try:
+            users = User.search({"email": user_email})
+        except Exception:
+            return
+
+        if len(users) < 1:
+            return
+
+        for u in users:
+            if not u.is_valid_password(user_pwd):
+                continue
+            return u
+
+        return None

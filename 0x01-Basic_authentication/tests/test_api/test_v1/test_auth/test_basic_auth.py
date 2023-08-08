@@ -114,14 +114,6 @@ class TestBasicAuth(unittest.TestCase):
         for i in reval:
             self.assertIsNone(i)
 
-    def test_extract_user_credentials_with_invalid_format(self):
-        """Test test_extract_user_credentials with non-str."""
-        reval = self.ba.extract_user_credentials("chee:zaram:okeke")
-        self.assertTrue(type(reval) == tuple)
-        self.assertEqual(len(reval), 2)
-        for i in reval:
-            self.assertIsNone(i)
-
     def test_extract_user_credentials(self):
         """Test test_extract_user_credentials."""
         user_pwd = "cheezaram:okeke"

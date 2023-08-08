@@ -92,7 +92,7 @@ class BasicAuth(Auth):
         if type(decoded_base64_authorization_header) != str:
             return (None, None)
 
-        p = r'(?P<username>[^:]+):(?P<pwd>[^:]+)'
+        p = r'(?P<username>[^:]+):(?P<pwd>.+)'
         match = re.fullmatch(p, decoded_base64_authorization_header.strip())
         if not match:
             return (None, None)

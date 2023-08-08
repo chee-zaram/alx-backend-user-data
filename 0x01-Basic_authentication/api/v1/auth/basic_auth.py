@@ -8,6 +8,7 @@ from base64 import b64decode
 from typing import Optional, Tuple, TypeVar
 import binascii
 import re
+from flask import request
 
 from api.v1.auth.auth import Auth
 from models.user import User
@@ -135,3 +136,13 @@ class BasicAuth(Auth):
             return u
 
         return None
+
+    def current_user(self, request: request = None) -> TypeVar('User'):
+        """
+        `current_user` overloads the method in `Auth`.
+        """
+        header = self.authorization_header(request)
+        token = self.extract_base64_authorization_header(header)
+        decoded_token = self.decode_base64_authorization_header(token)
+        email, pwd = self.extract_user_credentials(decoded_token)
+        return self.user_object_from_credentials(email, pwd)

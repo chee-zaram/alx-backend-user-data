@@ -8,6 +8,7 @@ from typing import Optional
 from uuid import uuid4
 
 from api.v1.auth.auth import Auth
+from models.user import User
 
 
 class SessionAuth(Auth):
@@ -49,3 +50,11 @@ class SessionAuth(Auth):
             return
 
         return self.user_id_by_session_id.get(session_id)
+
+    def current_user(self, request=None) -> User:
+        """
+        Returns the current user using the session ID stored in the request.
+        """
+        return User.get(
+            self.user_id_for_session_id(self.session_cookie(request))
+        )

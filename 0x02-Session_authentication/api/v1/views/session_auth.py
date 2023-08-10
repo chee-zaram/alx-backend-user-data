@@ -3,7 +3,7 @@
 Module `session_auth` handles all routes for the Session Authentication.
 """
 
-from flask import request, jsonify, make_response
+from flask import request, jsonify, make_response, abort
 from typing import List
 import os
 
@@ -50,3 +50,14 @@ def response(session_id: str, u: User):
     res = make_response(jsonify(u.to_json()), 200)
     res.set_cookie(os.getenv("SESSION_NAME"), session_id)
     return res
+
+
+@app_views.route("/auth_session/logout", methods=["DELETE"],
+                 strict_slashes=False)
+def logout():
+    """logout a user."""
+    from api.v1.app import auth
+    if auth.destroy_session(request) is False:
+        abort(404, description="Could not logout user using session")
+
+    return jsonify({}), 200

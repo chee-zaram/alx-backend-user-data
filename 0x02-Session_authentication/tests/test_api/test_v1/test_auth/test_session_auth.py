@@ -96,6 +96,10 @@ class TestSessionAuth(unittest.TestCase):
         self.assertTrue(type(u_id) == str)
         self.assertTrue(user_id == u_id)
 
+    def test_destroy_session_with_None_request(self):
+        """Test destroy_session with None request."""
+        self.assertFalse(self.sa.destroy_session(None))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -27,6 +27,7 @@ AUTH_EXCLUDED_PATHS = (
     "/api/v1/status/",
     "/api/v1/unauthorized/",
     "/api/v1/forbidden/",
+    "/api/v1/auth_session/login/",
 )
 
 
@@ -61,13 +62,15 @@ def auth_filter() -> None:
     if not auth.require_auth(request.path, AUTH_EXCLUDED_PATHS):
         return
 
-    if not auth.authorization_header(request):
+    if not auth.authorization_header(request) and not \
+            auth.session_cookie(request):
         abort(401, description="User Unauthorized")
 
-    if not auth.current_user(request):
+    current_user = auth.current_user(request)
+    if not current_user:
         abort(403, description="User Forbidden")
 
-    request.current_user = auth.current_user(request)
+    request.current_user = current_user
 
 
 if __name__ == "__main__":

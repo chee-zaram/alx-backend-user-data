@@ -59,7 +59,11 @@ class TestSessionAuth(unittest.TestCase):
 
     def test_create_session_with_valid_user_id(self):
         """Test create_session with valid user_id."""
-        self.assertTrue(type(self.sa.create_session("user_id") == str))
+        user_id = "user_id"
+        s_id = self.sa.create_session(user_id)
+        self.assertTrue(type(s_id) == str)
+        self.assertTrue(s_id in self.sa.user_id_by_session_id)
+        self.assertEqual(user_id, self.sa.user_id_by_session_id.get(s_id))
 
     def test_create_session_with_valid_user_id_multiple(self):
         """Test create_session with valid user id multiple."""
@@ -71,6 +75,26 @@ class TestSessionAuth(unittest.TestCase):
 
         self.assertTrue(self.sa.user_id_by_session_id.get(s_id_1) == user_id)
         self.assertTrue(self.sa.user_id_by_session_id.get(s_id_2) == user_id)
+
+    def test_user_id_for_session_id_with_None_user_id(self):
+        """Test user_id_for_session_id."""
+        self.assertIsNone(self.sa.user_id_for_session_id(None))
+
+    def test_user_id_for_session_id_with_non_str_user_id(self):
+        """Test user_id_for_session_id."""
+        self.assertIsNone(self.sa.user_id_for_session_id(100))
+
+    def test_user_id_for_session_id_with_empty_str_user_id(self):
+        """Test user_id_for_session_id."""
+        self.assertIsNone(self.sa.user_id_for_session_id(""))
+
+    def test_user_id_for_session_id_with_valid_user_id(self):
+        """Test user_id_for_session_id."""
+        user_id = "user_id"
+        s_id = self.sa.create_session(user_id)
+        u_id = self.sa.user_id_for_session_id(s_id)
+        self.assertTrue(type(u_id) == str)
+        self.assertTrue(user_id == u_id)
 
 
 if __name__ == "__main__":

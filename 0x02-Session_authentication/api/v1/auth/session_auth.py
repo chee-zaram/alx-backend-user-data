@@ -33,3 +33,19 @@ class SessionAuth(Auth):
         session_id = str(uuid4())
         self.user_id_by_session_id[session_id] = user_id
         return session_id
+
+    def user_id_for_session_id(self, session_id: str = None) -> Optional[str]:
+        """
+        `user_id_for_session_id` returns the user_id with a given session_id.
+
+        Returns:
+            str: The `user_id` associated with the given `session_id`.
+            None:
+                If `session_id` is None or not a string.
+                If `session_id` is an empty string.
+        """
+
+        if not session_id or type(session_id) != str:
+            return
+
+        return self.user_id_by_session_id.get(session_id)

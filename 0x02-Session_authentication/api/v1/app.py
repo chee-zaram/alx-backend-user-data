@@ -64,6 +64,8 @@ def auth_filter() -> None:
     if not auth.current_user(request):
         abort(403, description="User Forbidden")
 
+    request.current_user = auth.current_user(request)
+
 
 if __name__ == "__main__":
     host = getenv("API_HOST", "0.0.0.0")

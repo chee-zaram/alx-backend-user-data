@@ -6,6 +6,7 @@ import unittest
 from api.v1.auth.auth import Auth
 from unittest.mock import Mock
 from base64 import b64encode
+import os
 
 
 class TestAuth(unittest.TestCase):
@@ -51,6 +52,25 @@ class TestAuth(unittest.TestCase):
         r.headers = {"Authorization": "Basic {}".format(token)}
         self.assertEqual(
             self.a.authorization_header(r), r.headers["Authorization"])
+
+    def test_session_cookie_with_invalid_key(self):
+        """Tests session_cookie with invalid key request."""
+        mock_request = Mock(cookies={"session_id": "123"})
+        self.assertIsNone(self.a.session_cookie(mock_request))
+
+    def test_session_cookie_with_valid_key_but_no_env_var(self):
+        """Tests session_cookie with valid key but no env var."""
+        mock_request = Mock(cookies={"_my_session_id": "123"})
+        self.assertIsNone(self.a.session_cookie(mock_request))
+
+    def test_session_cookie_with_valid_key_and_env_var(self):
+        """Tests session_cookie with valid key and env var."""
+        session_id = "123"
+        mock_request = Mock(cookies={"_my_session_id": session_id})
+        os.environ["SESSION_NAME"] = "_my_session_id"
+        self.assertEqual(self.a.session_cookie(mock_request), session_id)
+        if os.environ["SESSION_NAME"]:
+            del os.environ["SESSION_NAME"]
 
 
 if __name__ == "__main__":

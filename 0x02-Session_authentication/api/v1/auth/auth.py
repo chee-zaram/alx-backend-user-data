@@ -6,6 +6,7 @@ Module `auth` contains the class `Auth`.
 from typing import List, TypeVar, Union
 from flask import request
 import re
+from os import getenv
 
 
 class Auth:
@@ -71,3 +72,17 @@ class Auth:
         `current_user` returns None.
         """
         return None
+
+    def session_cookie(self, request: request = None) -> Union[str, None]:
+        """
+        `session_cookie` gets a cookie value from a request.
+
+        Returns:
+            str: Value of cookie named `_my_session_id` from request. Name of
+                cookie is defined by env var `SESSION_NAME`.
+            None: If request is None or not a flask.request object.
+        """
+        if request is None:
+            return
+
+        return request.cookies.get(getenv("SESSION_NAME"))

@@ -78,3 +78,33 @@ class DB:
             raise NoResultFound()
 
         return user
+
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """
+        Updates a user with `user_id` in the database
+
+        Args:
+            user_id(int): id of user to update.
+
+        Returns:
+            None: If user could not be found.
+
+        Raises:
+            ValueError: If user_id is not an integer, or any attribute given
+                to update is not an attribute of User.
+        """
+
+        try:
+            self.find_user_by(id=int(user_id))
+        except (ValueError, InvalidRequestError, NoResultFound):
+            return
+
+        update_keys = {}
+        for k, v in kwargs.items():
+            if not hasattr(User, k):
+                raise ValueError()
+            update_keys[getattr(User, k)] = v
+
+        self._session.query(User).filter(
+            User.id == user_id).update(update_keys, synchronize_session=False)
+        self._session.commit()

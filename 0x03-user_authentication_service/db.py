@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """DB module
 """
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, tuple_
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
 
 from user import Base, User
@@ -16,7 +17,7 @@ class DB:
     def __init__(self) -> None:
         """Initialize a new DB instance
         """
-        self._engine = create_engine("sqlite:///a.db", echo=True)
+        self._engine = create_engine("sqlite:///a.db", echo=False)
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None
@@ -42,10 +43,38 @@ class DB:
             User: The newly added user.
         """
         try:
-            new_user = User(email=email, hashed_password=hashed_password)
-            self._session.add(new_user)
+            user = User(email=email, hashed_password=hashed_password)
+            self._session.add(user)
             self._session.commit()
         except Exception:
             self._session.rollback()
-            new_user = None
-        return new_user
+            return
+
+        return user
+
+    def find_user_by(self, **kwargs) -> User:
+        """
+        `find_user_by` gets a user from the database with using the arguments
+        supplied by `kwargs` as filter.
+
+        Returns:
+            User: The user, or None if no user is found.
+
+        Raises:
+            InvalidRequestError: If any of the arguments is not a valid
+                attribute of User.
+            NoResultFound: If no user is found with given characteristics.
+        """
+
+        keys, values = [], []
+        for k, v in kwargs.items():
+            if not hasattr(User, k):
+                raise InvalidRequestError()
+            keys.append(getattr(User, k))
+            values.append(v)
+        user = self._session.query(User).filter(
+            tuple_(*keys).in_([tuple(values)])).first()
+        if not user:
+            raise NoResultFound()
+
+        return user
